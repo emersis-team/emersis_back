@@ -108,7 +108,7 @@ class NovedadesBackController extends Controller
                 throw new \Error('No ingresó un número válido de Novedad.');
             }
 
-            $novedades = Budget::where('id', $novedadId)
+            $novedades = Novedad::where('id', $novedadId)
                                 ->first();
 
             if (!$novedades)
@@ -116,7 +116,7 @@ class NovedadesBackController extends Controller
                 throw new \Error('No existe la novedad.');
             }
 
-            //DELETE Budget en la DB
+            //DELETE Novedad en la DB
             if (!$novedades->delete())
             {
                 throw new \Error('No se pudo borrar la novedad.');
