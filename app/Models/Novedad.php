@@ -12,4 +12,9 @@ class Novedad extends Model
         'titulo','descripcion', 'activo'
     ];
 
+    //Get files for the novedad
+    public function files()
+    {
+        return $this->hasMany('App\Models\File')->orderBy('created_at');
+    }
 }

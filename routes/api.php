@@ -30,8 +30,12 @@ Route::group([
 
         Route::get('', 'NovedadesBackController@getNovedades');
         Route::post('', 'NovedadesBackController@createNovedad');
-        Route::patch('/{id}', 'NovedadesBackController@updateNovedad');
-        Route::delete('/{id}', 'NovedadesBackController@deleteNovedad');
+        Route::patch('/{novedad}', 'NovedadesBackController@updateNovedad');
+        Route::delete('/{novedad}', 'NovedadesBackController@deleteNovedad');
+
+        Route::get('/{novedad}/files', 'NovedadesBackController@getFilesFromNovedad');
+        Route::post('/{novedad}/files', 'NovedadesBackController@createFiles');
+
 
     });
 

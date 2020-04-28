@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\File;
 use App\Models\Novedad;
-
+use Illuminate\Http\Request;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 class NovedadesBackController extends Controller
 {
@@ -127,6 +130,75 @@ class NovedadesBackController extends Controller
             'message' => 'La novedad fur borrada con éxito'
             ]);
 
+        } catch (\Throwable $e) {
+
+            return response()->json([
+                'status' => $e->getCode() ? $e->getCode() : 500,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function getFilesFromNovedad(Novedad $novedad)
+    {
+        try {
+
+            return response()->json($novedad->load('files')->toArray());
+
+        } catch (\Throwable $e) {
+
+            return response()->json([
+                'status' => $e->getCode() ? $e->getCode() : 500,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function createFiles(Request $request, Novedad $novedad)
+    {
+        try {
+
+            //Chequea Description y File
+            $campos = request()->validate([
+                'description.*' => '',
+                'file.*' => 'required',
+                'file.*' => 'mimes:doc,pdf,docx,txt,zip,jpeg,bmp,png,xls,xlsx|max:51200'
+            ]);
+
+            $insert = array();
+
+            if ($request->hasfile('file')) {
+
+                foreach ($request->file('file') as $index => $file) {
+                    //Guardar los archivos en storage/app/public -
+                    //Link from "public/storage" to "storage/app/public" con:
+                    //php artisan storage:link
+
+                    var_dump($index);
+                    $filename = $file->store('files', 'public');
+
+                    $insert[$index]['file'] = "$filename";
+                    $insert[$index]['description'] = isset($campos['description'][$index])?$campos['description'][$index] : NULL;
+                    $insert[$index]['novedad_id'] = $novedad->id;
+                    $insert[$index]['created_at'] = Carbon::now();
+                    $insert[$index]['updated_at'] = Carbon::now();
+                }
+            }
+
+            if (!File::insert($insert)) {
+                //Como No se pudo insertar en la BD, borrar los archivos bajados al servidor
+                foreach ($insert as $index => $file) {
+                    $filename = $insert[$index]['file'];
+                    Storage::disk('public')->delete($filename);
+                }
+
+                throw new \Error('No se pudieron crear los archivos.');
+            }
+
+            return response()->json([
+                'status' => 200,
+                'message' => 'Creación de los archivos realizada con éxito'
+            ]);
         } catch (\Throwable $e) {
 
             return response()->json([
