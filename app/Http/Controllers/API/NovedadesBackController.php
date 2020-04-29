@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\File;
 use App\Models\Novedad;
-use Illuminate\Support\Facades\DB;
-
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 class NovedadesBackController extends Controller
 {
@@ -33,15 +33,15 @@ class NovedadesBackController extends Controller
                             ]);
 
         $novedad = new Novedad;
-        $novedad->titulo = $user->id;
-        $novedad->descripcion = $campos['name'];
-        $novedad->activo = "NEW";
+        $novedad->titulo = $campos['titulo'];
+        $novedad->descripcion = $campos['descripcion'];
+        $novedad->activo = $campos['activo'];
 
         if ($novedad->save()) {
           //var_dump($novedad->id);
           return response()->json([
             'status' => 200,
-            'message' => 'Creación del presupuesto realizada con éxito'
+            'message' => 'Creación dela novedad realizada con éxito'
           ]);
         } else {
           throw new \Error('No se pudo crear el presupuesto.');
@@ -57,42 +57,41 @@ class NovedadesBackController extends Controller
 
     public function updateNovedad($novedadId)
     {
-        $user = Auth::user();
-
         try {
 
             if (!is_numeric($novedadId)) {
-                throw new \Error('No ingresó un número válido de Presupuesto.');
+                throw new \Error('No ingresó un número válido de Novedad.');
             }
 
-            $budgets = Budget::where('id', $novedadId)
-                                ->where('user_id', $user->id)
+            $novedades = Novedad::where('id', $novedadId)
                                 ->first();
 
-            if (!$budgets)
+            if (!$novedades)
             {
-                throw new \Error('No existe el presupuesto para el usuario.');
+                throw new \Error('No existe la novedad.');
             }
 
             //Chequea los campos de entrada
             $campos = request()->validate([
-                'name' => 'string',
-                'status' => Rule::in(['NEW', 'CLOSED']),
+                'titulo' => 'string',
+                'descripcion' => 'string',
+                'activo' => 'boolean',
             ]);
 
             //UPDATE en la DB
-            $updateBudget = Budget::where('id',$budgetId)
-                        -> update(['name' => $campos['name'],
-                                   'status' => $campos['status'] ]);
+            $updateNovedad = Novedad::where('id',$novedadId)
+                            -> update(['titulo' => $campos['titulo'],
+                                   'descripcion' => $campos['descripcion'],
+                                   'activo' => $campos['activo'],]);
 
-            if (!$updateBudget)
+            if (!$updateNovedad)
             {
-                throw new \Error('No se pudo actualizar el presupuesto.');
+                throw new \Error('No se pudo actualizar la novedad.');
             }
 
             return response()->json([
             'status' => 200,
-            'message' => 'La actualización del presupuesto fue realizada con éxito'
+            'message' => 'La actualización de la novedad fue realizada con éxito'
             ]);
 
         } catch (\Throwable $e) {
@@ -104,54 +103,102 @@ class NovedadesBackController extends Controller
         }
     }
 
-    public function deleteNovedad($budgetId)
+    public function deleteNovedad($novedadId)
     {
-        $user = Auth::user();
-
         try {
 
-            if (!is_numeric($budgetId)) {
-                throw new \Error('No ingresó un número válido de Presupuesto.');
+            if (!is_numeric($novedadId)) {
+                throw new \Error('No ingresó un número válido de Novedad.');
             }
 
-            DB::beginTransaction();
-
-            $budgets = Budget::where('id', $budgetId)
-                                ->where('user_id', $user->id)
+            $novedades = Novedad::where('id', $novedadId)
                                 ->first();
 
-            if (!$budgets)
+            if (!$novedades)
             {
-                throw new \Error('No existe el presupuesto para el usuario.');
+                throw new \Error('No existe la novedad.');
             }
 
-            //DELETE Budget en la DB
-            if (!$budgets->delete())
+            //DELETE Novedad en la DB
+            if (!$novedades->delete())
             {
-                throw new \Error('No se pudo borrar el presupuesto.');
+                throw new \Error('No se pudo borrar la novedad.');
             }
-
-            //DELETE BudgetProducts en la DB
-            $budgetProducts = BudgetProduct::where('budget_id', $budgetId)->get();
-            //$budgetProducts->delete();
-
-            foreach ($budgetProducts as $budgetProduct) {
-                $budgetProduct->delete();
-            }
-
-            if (!$budgetProducts) {
-
-                DB::rollBack();
-                throw new \Error('No se pudo borrar los ítems del presupuesto. No se borró el presupuesto.');
-            }
-
-            DB::commit();
 
             return response()->json([
             'status' => 200,
-            'message' => 'El presupuesto y sus ítems han sido borrados con éxito'
+            'message' => 'La novedad fur borrada con éxito'
             ]);
 
+        } catch (\Throwable $e) {
+
+            return response()->json([
+                'status' => $e->getCode() ? $e->getCode() : 500,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function getFilesFromNovedad(Novedad $novedad)
+    {
+        try {
+
+            return response()->json($novedad->load('files')->toArray());
+
+        } catch (\Throwable $e) {
+
+            return response()->json([
+                'status' => $e->getCode() ? $e->getCode() : 500,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function createFiles(Request $request, Novedad $novedad)
+    {
+        try {
+
+            //Chequea Description y File
+            $campos = request()->validate([
+                'description.*' => '',
+                'file.*' => 'required',
+                'file.*' => 'mimes:doc,pdf,docx,txt,zip,jpeg,bmp,png,xls,xlsx|max:51200'
+            ]);
+
+            $insert = array();
+
+            if ($request->hasfile('file')) {
+
+                foreach ($request->file('file') as $index => $file) {
+                    //Guardar los archivos en storage/app/public -
+                    //Link from "public/storage" to "storage/app/public" con:
+                    //php artisan storage:link
+
+                    var_dump($index);
+                    $filename = $file->store('files', 'public');
+
+                    $insert[$index]['file'] = "$filename";
+                    $insert[$index]['description'] = isset($campos['description'][$index])?$campos['description'][$index] : NULL;
+                    $insert[$index]['novedad_id'] = $novedad->id;
+                    $insert[$index]['created_at'] = Carbon::now();
+                    $insert[$index]['updated_at'] = Carbon::now();
+                }
+            }
+
+            if (!File::insert($insert)) {
+                //Como No se pudo insertar en la BD, borrar los archivos bajados al servidor
+                foreach ($insert as $index => $file) {
+                    $filename = $insert[$index]['file'];
+                    Storage::disk('public')->delete($filename);
+                }
+
+                throw new \Error('No se pudieron crear los archivos.');
+            }
+
+            return response()->json([
+                'status' => 200,
+                'message' => 'Creación de los archivos realizada con éxito'
+            ]);
         } catch (\Throwable $e) {
 
             return response()->json([

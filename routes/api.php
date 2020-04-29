@@ -17,3 +17,26 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+
+Route::group([
+    'middleware' => ['JSONMiddleware'],
+    'prefix' => 'v1',
+    'namespace' => 'API',
+    'name' => 'api.',
+], function () {
+
+    Route::prefix('novedades')->group(function () {
+
+        Route::get('', 'NovedadesBackController@getNovedades');
+        Route::post('', 'NovedadesBackController@createNovedad');
+        Route::patch('/{novedad}', 'NovedadesBackController@updateNovedad');
+        Route::delete('/{novedad}', 'NovedadesBackController@deleteNovedad');
+
+        Route::get('/{novedad}/files', 'NovedadesBackController@getFilesFromNovedad');
+        Route::post('/{novedad}/files', 'NovedadesBackController@createFiles');
+
+
+    });
+
+});
