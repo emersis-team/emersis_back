@@ -41,7 +41,8 @@ class NovedadesBackController extends Controller
           //var_dump($novedad->id);
           return response()->json([
             'status' => 200,
-            'message' => 'Creación dela novedad realizada con éxito'
+            'message' => 'Creación dela novedad realizada con éxito',
+            'novedad_id' => $novedad->id,
           ]);
         } else {
           throw new \Error('No se pudo crear el presupuesto.');
@@ -174,7 +175,7 @@ class NovedadesBackController extends Controller
                     //Link from "public/storage" to "storage/app/public" con:
                     //php artisan storage:link
 
-                    var_dump($index);
+                    //var_dump($index);
                     $filename = $file->store('files', 'public');
 
                     $insert[$index]['file'] = "$filename";
