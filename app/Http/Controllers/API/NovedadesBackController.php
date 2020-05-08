@@ -8,6 +8,8 @@ use App\Models\Novedad;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+
 
 class NovedadesBackController extends Controller
 {
@@ -195,10 +197,12 @@ class NovedadesBackController extends Controller
 
                 throw new \Error('No se pudieron crear los archivos.');
             }
+            $id = DB::getPdo()->lastInsertId();
 
             return response()->json([
                 'status' => 200,
-                'message' => 'Creación de los archivos realizada con éxito'
+                'message' => 'Creación de los archivos realizada con éxito',
+                'file_id' => $id,
             ]);
         } catch (\Throwable $e) {
 
