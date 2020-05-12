@@ -163,9 +163,10 @@ class NovedadesBackController extends Controller
 
             //Chequea Description y File
             $campos = request()->validate([
-                'description.*' => '',
-                'file.*' => 'required',
-                'file.*' => 'mimes:doc,pdf,docx,txt,zip,jpeg,bmp,png,xls,xlsx|max:51200'
+                'file' => 'required',
+                'file.*' => ['required', 'mimes:doc,pdf,docx,txt,zip,jpeg,bmp,png,xls,xlsx|max:51200'],
+                'description' => ['sometimes', 'array'],
+                'description.*' => ['nullable', 'string']
             ]);
 
             $insert = array();
@@ -187,6 +188,8 @@ class NovedadesBackController extends Controller
                     $insert[$index]['updated_at'] = Carbon::now();
                 }
             }
+
+           // $id = 1000;
 
             if (!File::insert($insert)) {
                 //Como No se pudo insertar en la BD, borrar los archivos bajados al servidor
