@@ -8,6 +8,7 @@ class File extends Model
 {
     protected $fillable = [
         'file',
+        'original_file',
         'description',
         'novedad_id',
     ];

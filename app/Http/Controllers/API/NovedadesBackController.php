@@ -16,7 +16,8 @@ class NovedadesBackController extends Controller
     public function getNovedades()
     {
       $novedades = Novedad::orderBy('updated_at', 'desc')
-                            ->get();
+                            -> with('files')
+                            -> paginate(10);
 
       return response()->json([
         'novedades' => $novedades,
@@ -179,9 +180,12 @@ class NovedadesBackController extends Controller
                     //php artisan storage:link
 
                     //var_dump($index);
+
+                    $original_filename = $file->getClientOriginalName();
                     $filename = $file->store('files', 'public');
 
                     $insert[$index]['file'] = "$filename";
+                    $insert[$index]['original_file'] = "$original_filename";
                     $insert[$index]['description'] = isset($campos['description'][$index])?$campos['description'][$index] : NULL;
                     $insert[$index]['novedad_id'] = $novedad->id;
                     $insert[$index]['created_at'] = Carbon::now();
