@@ -27,8 +27,7 @@ Route::group([
 ], function () {
 
     Route::prefix('novedades')->group(function () {
-
-        Route::get('', 'NovedadesBackController@getNovedades');
+       // Route::get('', 'NovedadesBackController@getNovedades');
         Route::post('', 'NovedadesBackController@createNovedad');
         Route::patch('/{novedad}', 'NovedadesBackController@updateNovedad');
         Route::delete('/{novedad}', 'NovedadesBackController@deleteNovedad');
@@ -36,7 +35,27 @@ Route::group([
         Route::get('/{novedad}/files', 'NovedadesBackController@getFilesFromNovedad');
         Route::post('/{novedad}/files', 'NovedadesBackController@createFiles');
 
+      //  Route::post('login', 'AuthController@login');
+    });
 
+    Route::prefix('auth')->group(function () {
+        Route::post('login', 'AuthController@login');
+        // Route::post('logout', 'AuthController@logout');
+        // Route::post('refresh', 'AuthController@refresh');
+        // Route::post('me', 'AuthController@me');
     });
 
 });
+
+Route::group([
+    'middleware' => ['jwt.auth'],
+    'prefix' => 'v1',
+    'namespace' => 'API',
+    'name' => 'api.',
+
+], function () {
+    Route::get('novedades', 'NovedadesBackController@getNovedades');
+
+ });
+
+

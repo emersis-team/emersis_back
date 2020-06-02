@@ -19,7 +19,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*emersis-team.github.io*'],
+    'allowed_origins' => ['*emersis-team.github.io*', '*sancuba.github.io*'],
 
     'allowed_origins_patterns' => [],
 
