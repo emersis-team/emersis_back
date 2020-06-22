@@ -27,7 +27,7 @@ Route::group([
 ], function () {
 
     Route::prefix('novedades')->group(function () {
-       // Route::get('', 'NovedadesBackController@getNovedades');
+        Route::get('', 'NovedadesBackController@getNovedades');
         Route::post('', 'NovedadesBackController@createNovedad');
         Route::patch('/{novedad}', 'NovedadesBackController@updateNovedad');
         Route::delete('/{novedad}', 'NovedadesBackController@deleteNovedad');
@@ -54,8 +54,11 @@ Route::group([
     'name' => 'api.',
 
 ], function () {
-    Route::get('novedades', 'NovedadesBackController@getNovedades');
-
+    Route::prefix('messages')->group(function () {
+        Route::get('/', 'MessagesController@getConversations');
+        Route::get('/{conversation}', 'MessagesController@getMessagesFromUser');
+        Route::post('/', 'MessagesController@createMessage');
+    });
  });
 
 

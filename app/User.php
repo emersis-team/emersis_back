@@ -59,4 +59,16 @@ class User extends Authenticatable implements JWTSubject
         return [];
     }
 
+    //Get messages_sent for the user
+    public function messages_sent()
+    {
+        return $this->hasMany('App\Models\Message', 'sender_id')->orderBy('created_at','desc');
+    }
+
+    //Get messages_received for the user
+    public function messages_received()
+    {
+        return $this->hasMany('App\Models\Message', 'receiver_id')->orderBy('created_at','desc');
+    }
+
 }
