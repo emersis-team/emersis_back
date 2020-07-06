@@ -18,6 +18,7 @@ class MessagesController extends Controller
         $user = Auth::user();
         $conversations = array();
         $active_users = array();
+        $x = 0;
 
         $active_conversations = Conversation::where('user_id_1', $user->id)
                         ->orWhere('user_id_2', $user->id)
@@ -53,12 +54,15 @@ class MessagesController extends Controller
             $conversations[$x]['user_dest']= $user_dest;
             $conversations[$x]['ammount_no_read']= $ammount_messages_no_read;
         }
-        //Guardo el usuario logueado dentro de los usuarios con conversación ctiva
+        //Guardo el usuario logueado dentro de los usuarios con conversación activa
         $active_users[$x+1] = $user->id;
         sort($active_users);
 
-        //Continuamos con la misma indexación para $conversations
-        $x++;
+        //var_dump(count($active_users));
+
+        if (count($active_users) > 1) { //Existe alguna conversacion activa
+            $x++;
+        }
 
         $inactive_users = User::whereNotIn('id', $active_users)
                         ->orderBy('name', 'asc')
@@ -86,9 +90,10 @@ class MessagesController extends Controller
         ]);
     }
 
-    public function getMessagesFromUser(Conversation $conversation)
+    public function getMessagesFromUserOLD(Conversation $conversation)
     {
         $user = Auth::user();
+        $messages = [];
 
         if ($user->id !== $conversation->user_id_1 && $user->id !== $conversation->user_id_2) {
             throw new AccessDeniedHttpException(__('No existe la conversación para el usuario.'));
@@ -108,6 +113,52 @@ class MessagesController extends Controller
             'user_origin' => $user->id,
             'messages' => $messages,
         ]);
+
+    }
+    public function getMessagesFromConversation($request)
+    {
+        $user = Auth::user();
+        $messages = [];
+        $conversation_id = intval($request);
+
+        try {
+            // var_dump($conversation_id);
+            // var_dump($request);
+
+            if ($conversation_id > 0) {
+                //Chequear que exista la conversacion y pertenezca al usuario logueado
+                $conversation = Conversation::where('id', $conversation_id)
+                                          ->first();
+
+                if (!$conversation) {
+                    throw new AccessDeniedHttpException(__('No existe la conversación.'));
+                } else { //Existe el id de conversacion PERO NO pertenece al usuario logueado
+                    if (($user->id !== $conversation->user_id_1 && $user->id !== $conversation->user_id_2)) {
+                        throw new AccessDeniedHttpException(__('No existe la conversación para el usuario.'));
+                    }
+                }
+
+                //Devuelve los mensajes de una Conversacion y pone como READ todos los mjes no leidos
+                $messages = Message::where('conversation_id', $conversation->id)
+                                 ->orderBy('created_at', 'asc')
+                                 ->paginate(10);
+
+                Message::where('receiver_id', $user->id)
+                    ->where('read_at', null)
+                    ->update(['read_at' => now()]);
+            }
+
+            return response()->json([
+                'user_origin' => $user->id,
+                'messages' => $messages,
+            ]);
+        }catch (\Throwable $e) {
+            throw $e;
+            return response()->json([
+                'status' => $e->getCode() ? $e->getCode() : 500,
+                'message' => $e->getMessage()
+            ]);
+        }
 
     }
     public function createMessage_OLD(Request $request, Conversation $conversation)
@@ -171,7 +222,7 @@ class MessagesController extends Controller
 
         //Chequea los campos de entrada
         $campos = $request->validate([
-          'message' => ['required','string'],
+          'message' => ['required','string', 'max:255'],
           'receiver_id' => ['required','integer']
         ]);
 

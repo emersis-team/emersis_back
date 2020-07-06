@@ -56,9 +56,7 @@ Route::group([
 ], function () {
     Route::prefix('messages')->group(function () {
         Route::get('/', 'MessagesController@getConversations');
-        Route::get('/{conversation}', 'MessagesController@getMessagesFromUser');
+        Route::get('/{conversation_id}', 'MessagesController@getMessagesFromConversation');
         Route::post('/', 'MessagesController@createMessage');
     });
  });
-
-
