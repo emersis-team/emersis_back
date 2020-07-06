@@ -140,7 +140,7 @@ class MessagesController extends Controller
 
                 //Devuelve los mensajes de una Conversacion y pone como READ todos los mjes no leidos
                 $messages = Message::where('conversation_id', $conversation->id)
-                                 ->orderBy('created_at', 'asc')
+                                 ->orderBy('created_at', 'desc')
                                  ->paginate(10);
 
                 Message::where('receiver_id', $user->id)
