@@ -118,7 +118,6 @@ class MessagesController extends Controller
     public function getMessagesFromConversation($request)
     {
         $user = Auth::user();
-        $messages = [];
         $conversation_id = intval($request);
 
         try {
@@ -146,6 +145,9 @@ class MessagesController extends Controller
                 Message::where('receiver_id', $user->id)
                     ->where('read_at', null)
                     ->update(['read_at' => now()]);
+            }else{//Select placebo
+                $messages = Message::where('conversation_id', 0)
+                                 ->paginate(10);
             }
 
             return response()->json([
