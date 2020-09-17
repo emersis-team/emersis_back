@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+
 
 class MessagesController extends Controller
 {
@@ -336,16 +338,31 @@ class MessagesController extends Controller
 
         $files = array();
 
-        DB::beginTransaction();
-        try {
-
-            $campos = $request->validate([
+        $validator = Validator::make(
+            $request->all(),
+            [
                 'receiver_id' => ['required','integer'],
                 'file' => ['required', 'array'],
-                'file.*' => ['file','required', 'mimes:doc,pdf,docx,txt,zip,jpeg,bmp,png,xls,xlsx,mov,qt,mp4,mp3,m4a|max:10240'],
+                'file.*' => ['file','required', 'mimes:doc,pdf,docx,txt,zip,jpeg,bmp,xls,xlsx,mov,qt,mp4,mp3,m4a' ,'max:10240'],
                 'description' => ['sometimes', 'array'],
                 'description.*' => ['nullable', 'string'],
-            ]);
+            ],[
+                'file.*.mimes' => __('Los archivos sólo pueden ser doc,pdf,docx,txt,zip,jpeg,bmp,xls,xlsx,mov,qt,mp4,mp3,m4a'),
+                'file.*.max' => __('Cada archivo no puede ser mayor a 10MB'),
+            ]
+        );
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        DB::beginTransaction();
+
+        try {
+
+            $campos = $request;
 
             $user_dest = User::where('id',$campos['receiver_id'])
                         ->first();
@@ -457,10 +474,14 @@ class MessagesController extends Controller
             }
 
             $code = $e->getCode() ? $e->getCode() : 500;
-            return response()->json([
-                'status' => $e->getCode() ? $e->getCode() : 500,
-                'message' => $e->getMessage()
-            ], $code);
+            // return response()->json([
+            //     'status' => $e->getCode() ? $e->getCode() : 500,
+            //     'message' => $e->getMessage()
+
+            // ], $code);
+            return response()->json(['errors' => $e->getMessage()], 400);
+
+
         }
     }
 }
