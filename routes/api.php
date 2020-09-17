@@ -34,15 +34,13 @@ Route::group([
 
         Route::get('/{novedad}/files', 'NovedadesBackController@getFilesFromNovedad');
         Route::post('/{novedad}/files', 'NovedadesBackController@createFiles');
-
-      //  Route::post('login', 'AuthController@login');
     });
 
     Route::prefix('auth')->group(function () {
         Route::post('login', 'AuthController@login');
-        // Route::post('logout', 'AuthController@logout');
-        // Route::post('refresh', 'AuthController@refresh');
-        // Route::post('me', 'AuthController@me');
+        Route::post('refresh', 'AuthController@refresh');
+        Route::post('logout', 'AuthController@logout');
+        Route::post('me', 'AuthController@me');
     });
 
 });
@@ -57,6 +55,7 @@ Route::group([
     Route::prefix('messages')->group(function () {
         Route::get('/', 'MessagesController@getConversations');
         Route::get('/{conversation_id}', 'MessagesController@getMessagesFromConversation');
-        Route::post('/', 'MessagesController@createMessage');
+        Route::post('/textMessage', 'MessagesController@createTextMessage');
+        Route::post('/fileMessage', 'MessagesController@createFileMessage');
     });
  });

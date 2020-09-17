@@ -16,9 +16,9 @@ class CreateMessagesTable extends Migration
         Schema::create('messages', function (Blueprint $table) {
             $table->id();
             $table->foreignId('conversation_id')->references('id')->on('conversations');
-            $table->string('message');
             $table->foreignId('sender_id')->references('id')->on('users');
             $table->foreignId('receiver_id')->references('id')->on('users');
+            $table->morphs('message');
             $table->timestamp('read_at')->nullable();
             $table->timestamps();
         });

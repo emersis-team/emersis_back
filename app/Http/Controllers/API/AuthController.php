@@ -16,7 +16,7 @@ class AuthController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('auth:api', ['except' => ['login']]);
+       $this->middleware('auth:api', ['except' => ['login']]);
     }
 
     /**
@@ -34,14 +34,23 @@ class AuthController extends Controller
 
         $credentials = request(['email', 'password']);
 
-        if (! $token = auth()->attempt($credentials)) {
+        //if (! $token = auth()->attempt($credentials)) {
+        if (! $token = Auth::attempt($credentials)) {
+
             return response()->json(['error' => 'Unauthorized'], 401);
         }
+
+        //var_dump("Token: " . $token);
+        //var_dump("Attemp: ". Auth::attempt($credentials) );
 
         $user = User::where('email',$campos['email'])
                             -> first();
 
-        return response()->json(['user' => $user, 'token' => $token]);
+        return response()->json([
+            'user' => $user,
+            'token' => $token,
+            'expires_in' => Auth::factory()->getTTL() * 60
+        ]);
 
     }
 
@@ -74,7 +83,7 @@ class AuthController extends Controller
      */
     public function refresh()
     {
-        return $this->respondWithToken(auth()->refresh());
+        return $this->respondWithToken(Auth::refresh());
     }
 
     /**
@@ -86,10 +95,12 @@ class AuthController extends Controller
      */
     protected function respondWithToken($token)
     {
+        $user = Auth::user();
+
         return response()->json([
-            'access_token' => $token,
-            'token_type' => 'bearer',
-            'expires_in' => auth()->factory()->getTTL() * 60
+            'user' => $user,
+            'token' => $token,
+            'expires_in' => Auth::factory()->getTTL() * 60
         ]);
     }
 }

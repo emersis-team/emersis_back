@@ -10,6 +10,8 @@ class File extends Model
         'file',
         'original_file',
         'description',
+        'attachable_type',
+        'attachable_id',
         'novedad_id',
     ];
 
@@ -17,5 +19,11 @@ class File extends Model
     public function novedad()
     {
         return $this->belongsTo('App\Models\Novedad');
+    }
+
+    //Get the owning attachable model.
+    public function attachable()
+    {
+        return $this->morphTo();
     }
 }

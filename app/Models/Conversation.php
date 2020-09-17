@@ -13,7 +13,7 @@ class Conversation extends Model
     //Get messages for the conversation
     public function messages()
     {
-        return $this->hasMany('App\Models\Message')->orderBy('created_at','asc');
+        return $this->hasMany('App\Models\Message')->orderBy('created_at','desc');
     }
 
     //Get messages NO READ for the conversation
@@ -33,4 +33,5 @@ class Conversation extends Model
     {
         return $this->belongsTo('App\User','user_id_2');
     }
+
 }
