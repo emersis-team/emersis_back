@@ -343,11 +343,11 @@ class MessagesController extends Controller
             [
                 'receiver_id' => ['required','integer'],
                 'file' => ['required', 'array'],
-                'file.*' => ['file','required', 'mimes:doc,pdf,docx,txt,zip,jpeg,bmp,xls,xlsx,mov,qt,mp4,mp3,m4a' ,'max:10240'],
+                'file.*' => ['file','required', 'mimes:doc,pdf,docx,txt,zip,jpeg,png,bmp,xls,xlsx,mov,qt,mp4,mp3,m4a' ,'max:10240'],
                 'description' => ['sometimes', 'array'],
                 'description.*' => ['nullable', 'string'],
             ],[
-                'file.*.mimes' => __('Los archivos sólo pueden ser doc,pdf,docx,txt,zip,jpeg,bmp,xls,xlsx,mov,qt,mp4,mp3,m4a'),
+                'file.*.mimes' => __('Los archivos sólo pueden ser doc,pdf,docx,txt,zip,jpeg,png,bmp,xls,xlsx,mov,qt,mp4,mp3,m4a'),
                 'file.*.max' => __('Cada archivo no puede ser mayor a 10MB'),
             ]
         );
@@ -403,7 +403,21 @@ class MessagesController extends Controller
                 $original_filename = $file->getClientOriginalName();
 
                 $name = explode('.', $original_filename);
-                $filename  = $name[0] .'_' . time() . '.' . $name[1];
+
+                $cant = count($name);
+                $filename  = "";
+
+                //Concateno si hubieran varios . sólo me interesa separar el último
+                for($i=0;$i<=$cant-2;$i++){
+
+                    if($i!=0){
+                        $filename  = $filename . '.';
+                    }
+                    $filename  = $filename . $name[$i];
+                }
+
+                //$filename  = $name[0] .'_' . time() . '.' . $name[1];
+                $filename  = $filename .'_' . time() . '.' . $name[$cant-1];
 
                 $file->storeAs('public/files', $filename);
 
